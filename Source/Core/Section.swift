@@ -534,3 +534,90 @@ open class MultivaluedSection: Section {
         return kvoWrapper._allRows.filter({ $0.baseValue != nil }).map({ $0.baseValue })
     }
 }
+
+open class SuggestionSection:Section {
+    public var onSearchFieldAsync:((String?, @escaping (SuggestionDataSource) -> Void) -> Void)?
+    public var suggestionSectionRowToAdd:((_ selectedIndex:Int?, _ searchedText: String?) -> BaseRow?)?
+    
+    private let suggestionView:SuggestionView = SuggestionView()
+    private let suggestionSearchRow:SuggestionSearchRow = SuggestionSearchRow(nil)
+    
+    override public init(_ initializer: @escaping (SuggestionSection) -> Void) {
+        super.init()
+        initialize()
+        initializer(self)
+    }
+    
+    public required init<S>(_ elements: S) where S : Sequence, S.Element == BaseRow {
+        super.init(elements)
+        initialize()
+    }
+    
+    public required init() {
+        super.init()
+        initialize()
+    }
+    
+    func initialize() {
+        suggestionSearchRow.placeHolder = "SEARCH ROW"
+        suggestionSearchRow.baseCell.height = { 50.0 }
+        suggestionSearchRow.baseCell.separatorInset.left = 0.0
+        suggestionSearchRow.baseCell.selectionStyle = .none
+        
+        suggestionSearchRow.onTextFieldDidBeginEditing = { (cell, row) in
+            guard let formViewController = cell.formViewController() else { return }
+            formViewController.tableView.addSubview(self.suggestionView)
+            self.suggestionView.leftAnchor.constraint(equalTo: formViewController.view.leftAnchor).isActive = true
+            self.suggestionView.rightAnchor.constraint(equalTo: formViewController.view.rightAnchor).isActive = true
+            self.suggestionView.bottomAnchor.constraint(equalTo: formViewController.view.bottomAnchor).isActive = true
+            self.suggestionView.topAnchor.constraint(equalTo: cell.bottomAnchor).isActive = true
+        }
+        
+        suggestionSearchRow.onTextFieldDidChange = {(cell, row) in
+            self.onSearchFieldAsync?(cell.textField.text, { dataSource in
+                self.suggestionView.dataSource = dataSource
+                self.suggestionView.reloadData()
+            })
+        }
+        
+        suggestionSearchRow.onDidSearchText = {(cell, row) in
+            if let text = cell.textField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
+                self.appendRow(nil, text)
+            }
+            self.endSearching()
+        }
+        
+        suggestionSearchRow.onCellSelection({ (cell, row) in
+            cell.textField.becomeFirstResponder()
+        })
+        
+        
+        suggestionView.onDidSelectRowAtIndex = { index in
+            self.appendRow(index, nil)
+            self.endSearching()
+        }
+        
+        suggestionSearchRow.onTextFieldDidEndEditing = { (cell, row) in
+            self.suggestionView.removeFromSuperview()
+        }
+        
+        
+        append(suggestionSearchRow)
+    }
+    
+    func endSearching() {
+        suggestionSearchRow.endEditing()
+        resetSuggestionView()
+    }
+    
+    func resetSuggestionView() {
+        suggestionView.reset()
+        suggestionView.removeFromSuperview()
+    }
+    
+    func appendRow(_ selectedIndex:Int?, _ searchedText:String?) {
+        if let row = suggestionSectionRowToAdd?(selectedIndex, searchedText) {
+            append(row)
+        }
+    }
+}

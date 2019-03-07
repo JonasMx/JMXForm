@@ -368,6 +368,10 @@ extension Form {
 	var containsMultivaluedSection: Bool {
 		return kvoWrapper._allSections.contains { $0 is MultivaluedSection }
 	}
+    
+    var containsSuggestionSection: Bool {
+        return kvoWrapper._allSections.contains { $0 is SuggestionSection }
+    }
 
     func getValues(for rows: [BaseRow]) -> [String: Any?] {
         return rows.reduce([String: Any?]()) {

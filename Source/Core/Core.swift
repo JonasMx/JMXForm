@@ -509,7 +509,8 @@ open class FormViewController: UIViewController, FormViewControllerProtocol, For
         NotificationCenter.default.addObserver(self, selector: #selector(FormViewController.keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(FormViewController.keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
 
-        if form.containsMultivaluedSection && (isBeingPresented || isMovingToParent) {
+        
+        if (form.containsMultivaluedSection || form.containsSuggestionSection) && (isBeingPresented || isMovingToParent) {
             tableView.setEditing(true, animated: false)
         }
     }
@@ -824,14 +825,20 @@ extension FormViewController : UITableViewDelegate {
         guard !row.isDisabled else { return false }
 		if row.trailingSwipe.actions.count > 0 { return true }
 		if #available(iOS 11,*), row.leadingSwipe.actions.count > 0 { return true }
-		guard let section = form[indexPath.section] as? MultivaluedSection else { return false }
-        guard !(indexPath.row == section.count - 1 && section.multivaluedOptions.contains(.Insert) && section.showInsertIconInAddButton) else {
+        
+        if let section = form[indexPath.section] as? MultivaluedSection {
+            guard !(indexPath.row == section.count - 1 && section.multivaluedOptions.contains(.Insert) && section.showInsertIconInAddButton) else {
+                return true
+            }
+            if indexPath.row > 0 && section[indexPath.row - 1] is BaseInlineRowType && section[indexPath.row - 1]._inlineRow != nil {
+                return false
+            }
             return true
+        } else if let _ = form[indexPath.section] as? SuggestionSection {
+            return indexPath.item == 0 ? false : true
         }
-        if indexPath.row > 0 && section[indexPath.row - 1] is BaseInlineRowType && section[indexPath.row - 1]._inlineRow != nil {
-            return false
-        }
-        return true
+        
+        return false
     }
 
     open func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
@@ -912,18 +919,19 @@ extension FormViewController : UITableViewDelegate {
     }
 
     open func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
-        guard let section = form[indexPath.section] as? MultivaluedSection else {
-			if form[indexPath].trailingSwipe.actions.count > 0 {
-				return .delete
-			}
-            return .none
-        }
-        if section.multivaluedOptions.contains(.Insert) && indexPath.row == section.count - 1 {
-            return section.showInsertIconInAddButton ? .insert : .none
-        }
-        if section.multivaluedOptions.contains(.Delete) {
+        if let section = form[indexPath.section] as? MultivaluedSection {
+            if section.multivaluedOptions.contains(.Insert) && indexPath.row == section.count - 1 {
+                return section.showInsertIconInAddButton ? .insert : .none
+            }
+            if section.multivaluedOptions.contains(.Delete) {
+                return .delete
+            }
+        } else if let _ = form[indexPath.section] as? SuggestionSection {
+            return indexPath.row == 0 ? .none : .delete
+        } else if form[indexPath].trailingSwipe.actions.count > 0 {
             return .delete
         }
+        
         return .none
     }
 
