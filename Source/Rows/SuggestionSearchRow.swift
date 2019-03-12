@@ -9,12 +9,6 @@
 import UIKit
 
 final class SuggestionSearchRow:Row<SuggestionSearchCell>, RowType {
-    var placeHolder:String? {
-        didSet {
-            cell.textField.placeholder = placeHolder
-        }
-    }
-    
     var onTextFieldDidBeginEditing:((SuggestionSearchCell, SuggestionSearchRow) -> ())?
     var onTextFieldDidEndEditing:((SuggestionSearchCell, SuggestionSearchRow) -> ())?
     var onTextFieldDidChange:((SuggestionSearchCell, SuggestionSearchRow) -> ())?
@@ -31,7 +25,7 @@ final class SuggestionSearchRow:Row<SuggestionSearchCell>, RowType {
     }
     
     @objc private func textFieldDidChange(_ sender:UITextField) {
-        value = sender.text
+        value = cell.textField.text
         
         if let text = sender.text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
             cell.addButton.isEnabled = true
@@ -64,7 +58,7 @@ final class SuggestionSearchRow:Row<SuggestionSearchCell>, RowType {
 class SuggestionSearchCell:Cell<String>, CellType {
     let textField:UITextField = {
         let tf = UITextField()
-        tf.layer.masksToBounds = true        
+        tf.layer.masksToBounds = true
         tf.translatesAutoresizingMaskIntoConstraints = false
         tf.setContentHuggingPriority(UILayoutPriority(rawValue: 999.0), for: .horizontal)
         return tf
@@ -82,6 +76,8 @@ class SuggestionSearchCell:Cell<String>, CellType {
     
     override open func setup() {
         super.setup()
+        
+        detailTextLabel?.isHidden = true
         
         contentView.addSubview(textField)
         contentView.addSubview(addButton)
