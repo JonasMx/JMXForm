@@ -15,13 +15,10 @@ final class SuggestionSearchRow:Row<SuggestionSearchCell>, RowType {
         }
     }
     
-    
     var onTextFieldDidBeginEditing:((SuggestionSearchCell, SuggestionSearchRow) -> ())?
     var onTextFieldDidEndEditing:((SuggestionSearchCell, SuggestionSearchRow) -> ())?
     var onTextFieldDidChange:((SuggestionSearchCell, SuggestionSearchRow) -> ())?
     var onDidSearchText:((SuggestionSearchCell, SuggestionSearchRow) -> ())?
-    
-    
     
     required public init(tag: String?) {
         super.init(tag: tag)
@@ -67,7 +64,9 @@ final class SuggestionSearchRow:Row<SuggestionSearchCell>, RowType {
 class SuggestionSearchCell:Cell<String>, CellType {
     let textField:UITextField = {
         let tf = UITextField()
+        tf.layer.masksToBounds = true        
         tf.translatesAutoresizingMaskIntoConstraints = false
+        tf.setContentHuggingPriority(UILayoutPriority(rawValue: 999.0), for: .horizontal)
         return tf
     }()
     
@@ -76,7 +75,8 @@ class SuggestionSearchCell:Cell<String>, CellType {
         b.translatesAutoresizingMaskIntoConstraints = false
         b.setTitle("Add", for: .normal)
         b.isEnabled = false
-        b.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        b.setContentHuggingPriority(UILayoutPriority(rawValue: 1000.0), for: .horizontal)
+        b.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 1000.0), for: .horizontal)
         return b
     }()
     
