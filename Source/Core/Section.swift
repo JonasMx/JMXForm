@@ -536,6 +536,12 @@ open class MultivaluedSection: Section {
 }
 
 open class SuggestionSection:Section {
+    public var searchPlaceHolder:String? {
+        didSet {
+            suggestionSearchRow.cell.textField.placeholder = searchPlaceHolder
+        }
+    }
+    
     public var onSearchFieldAsync:((String?, @escaping (SuggestionDataSource) -> Void) -> Void)?
     public var suggestionSectionRowToAdd:((_ selectedIndex:Int?, _ searchedText: String?) -> BaseRow?)?
     
@@ -559,7 +565,6 @@ open class SuggestionSection:Section {
     }
     
     func initialize() {
-        suggestionSearchRow.placeHolder = "SEARCH ROW"
         suggestionSearchRow.baseCell.height = { 50.0 }
         suggestionSearchRow.baseCell.separatorInset.left = 0.0
         suggestionSearchRow.baseCell.selectionStyle = .none
