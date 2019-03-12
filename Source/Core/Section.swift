@@ -625,4 +625,8 @@ open class SuggestionSection:Section {
             append(row)
         }
     }
+    
+    public func values() -> [Any?] {
+        return kvoWrapper._allRows.suffix(from: 1).filter({ $0.baseValue != nil }).map({ $0.baseValue })
+    }
 }
